@@ -56,7 +56,6 @@ jobs:
           else
             echo "::set-output name=run::false"
           fi
-          why
 
       - name: Configure AWS credentials
         if: steps.check-file.outputs.run == 'true'
