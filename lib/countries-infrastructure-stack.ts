@@ -26,6 +26,17 @@ export class CountriesInfrastructureStack extends cdk.Stack {
       },
     });
 
+    const dbSecurityGroup = new ec2.SecurityGroup(this, 'CountriesDBSecurityGroup', {
+      vpc,
+      description: 'Security group for the database',
+      securityGroupName: 'CountriesDBSecurityGroup',
+    });
+    dbSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(5432),
+      'Allow inbound traffic from anywhere on port 5432',
+    );
+
     const rdsInstance = new rds.DatabaseInstance(this, 'CountriesDB', {
       engine: rds.DatabaseInstanceEngine.postgres({
         version: rds.PostgresEngineVersion.VER_16_2,
@@ -40,6 +51,10 @@ export class CountriesInfrastructureStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       deletionProtection: false,
       databaseName: this.databaseName,
+      parameters: {
+        'rds.force_ssl': '0',
+      },
+      securityGroups: [dbSecurityGroup],
     });
 
     // Exposing the database password to lambda, assuming it is ok to have it in AWS infrastructure
