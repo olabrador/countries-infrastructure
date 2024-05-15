@@ -60,4 +60,5 @@ jobs:
           echo "$result"
           functionError=$(echo "$result" | jq -r '.FunctionError')
           statusCode=$(echo "$result" | jq -r '.statusCode')
-          if [[ $functionError != null ]] || [[ $statusCode -eq 500 ]]; then exit 1; fi
+          StatusCode=$(echo "$result" | jq -r '.StatusCode')
+          if [[ $functionError != null ]] || [[ $statusCode -ne 200 ]] || [[ $StatusCode -ne 200 ]]; then exit 1; fi
