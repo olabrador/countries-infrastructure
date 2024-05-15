@@ -58,10 +58,6 @@ jobs:
         run: |
           result=$(aws lambda invoke --function-name ${{ steps.get-lambda-function-name.outputs.lambda-function-name }} /dev/stdout)
           echo "$result"
-          functionError=$(echo "$result" | jq -r '.FunctionError')
-          statusCode=$(echo "$result" | jq -r '.statusCode')
-          StatusCode=$(echo "$result" | jq -r '.StatusCode')
-          echo "FunctionError: $functionError"
-          echo "statusCode: $statusCode"
-          echo "StatusCode: $StatusCode"
-          if [[ $functionError != null ]] || [[ $statusCode -ne 200 ]] || [[ $StatusCode -ne 200 ]]; then exit 1; fi
+          lambdaResponse=$(echo "$result" | jq -r '.[0]')
+          statusCode=$(echo "$lambdaResponse" | jq -r '.statusCode')
+          if [[ $statusCode -ne 200 ]]; then exit 1; fi
