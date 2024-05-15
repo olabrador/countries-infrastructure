@@ -58,6 +58,5 @@ jobs:
         run: |
           result=$(aws lambda invoke --function-name ${{ steps.get-lambda-function-name.outputs.lambda-function-name }} /dev/stdout)
           echo "$result"
-          lambdaResponse=$(echo "$result" | jq -r '.[0]')
-          statusCode=$(echo "$lambdaResponse" | jq -r '.statusCode')
+          statusCode=$(echo "$result" | jq -r '.statusCode' | head -1)
           if [[ $statusCode -ne 200 ]]; then exit 1; fi
