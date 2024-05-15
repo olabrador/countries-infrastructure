@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Check if migration function was changed
         id: check-file
@@ -54,6 +56,7 @@ jobs:
           else
             echo "::set-output name=run::false"
           fi
+          why
 
       - name: Configure AWS credentials
         if: steps.check-file.outputs.run == 'true'
