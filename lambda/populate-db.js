@@ -28,7 +28,7 @@ async function createTable(client) {
       modesty FLOAT,
       country_cluster VARCHAR(255),
       charisma FLOAT,
-      decisive FLOAT,
+      decisive FLOAT
     );
   `);
 }
@@ -96,7 +96,7 @@ exports.handler = async () => {
     await createTable(client);
 
     const filePath = path.resolve(__dirname, 'data', 'globe_phase_2_aggregated_leadership_data.csv');
-    await seedData(filePath);
+    await seedData(client, filePath);
 
     return {
       statusCode: 200,
