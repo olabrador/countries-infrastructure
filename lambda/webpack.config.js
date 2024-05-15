@@ -15,5 +15,6 @@ module.exports = {
   output: {
     filename: 'populate-db.js',
     path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'commonjs2',
   },
 };
