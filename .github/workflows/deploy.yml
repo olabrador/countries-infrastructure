@@ -56,4 +56,8 @@ jobs:
 
       - name: Invoke Lambda function
         run: |
-          aws lambda invoke --function-name ${{ steps.get-lambda-function-name.outputs.lambda-function-name }} /dev/stdout
+          result=$(aws lambda invoke --function-name ${{ steps.get-lambda-function-name.outputs.lambda-function-name }} /dev/stdout)
+          echo "$result"
+          functionError=$(echo "$result" | jq -r '.FunctionError')
+          statusCode=$(echo "$result" | jq -r '.statusCode')
+          if [[ $functionError != null ]] || [[ $statusCode -eq 500 ]]; then exit 1; fi
