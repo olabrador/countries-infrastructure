@@ -7,6 +7,7 @@ import { Construct } from 'constructs';
 
 export class CountriesInfrastructureStack extends cdk.Stack {
   private readonly databaseName = 'countries';
+  private readonly databaseUsername = 'countriesroot';
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -18,7 +19,7 @@ export class CountriesInfrastructureStack extends cdk.Stack {
     const dbCredentialsSecret = new secretsManager.Secret(this, 'CountriesDBCredentials', {
       secretName: 'rds-credentials',
       generateSecretString: {
-        secretStringTemplate: JSON.stringify({ username: 'admin' }),
+        secretStringTemplate: JSON.stringify({ username: this.databaseUsername }),
         excludePunctuation: true,
         includeSpace: false,
         generateStringKey: 'password',
@@ -31,9 +32,9 @@ export class CountriesInfrastructureStack extends cdk.Stack {
       }),
       vpc,
       credentials: rds.Credentials.fromSecret(dbCredentialsSecret),
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.MICRO),
+      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
       multiAz: false,
-      allocatedStorage: 2,
+      allocatedStorage: 20,
       vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
       publiclyAccessible: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -41,6 +42,8 @@ export class CountriesInfrastructureStack extends cdk.Stack {
       databaseName: this.databaseName,
     });
 
+    // Exposing the database password to lambda, assuming it is ok to have it in AWS infrastructure
+    const password = dbCredentialsSecret.secretValueFromJson('password').unsafeUnwrap();
     const migrationFunction = new lambda.Function(this, 'CountriesMigrationFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset('lambda'),
@@ -48,8 +51,8 @@ export class CountriesInfrastructureStack extends cdk.Stack {
       environment: {
         RDS_HOST: rdsInstance.dbInstanceEndpointAddress,
         RDS_PORT: rdsInstance.dbInstanceEndpointPort,
-        RDS_USER: dbCredentialsSecret.secretValueFromJson('username').toString(),
-        RDS_PASSWORD: dbCredentialsSecret.secretValueFromJson('password').toString(),
+        RDS_USER: this.databaseUsername,
+        RDS_PASSWORD: password,
         RDS_DBNAME: this.databaseName,
       },
       vpc,
@@ -60,5 +63,7 @@ export class CountriesInfrastructureStack extends cdk.Stack {
     dbCredentialsSecret.grantRead(migrationFunction);
 
     rdsInstance.grantConnect(migrationFunction);
+
+    new cdk.CfnOutput(this, 'MigrationFunctionName', { value: migrationFunction.functionName });
   }
 }
