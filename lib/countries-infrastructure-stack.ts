@@ -46,7 +46,19 @@ export class CountriesInfrastructureStack extends cdk.Stack {
     const password = dbCredentialsSecret.secretValueFromJson('password').unsafeUnwrap();
     const migrationFunction = new lambda.Function(this, 'CountriesMigrationFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset('lambda'),
+      code: lambda.Code.fromAsset('lambda', {
+        bundling: {
+          image: lambda.Runtime.NODEJS_20_X.bundlingImage,
+          command: [
+            'bash',
+            '-c',
+            'npm install && npx webpack && cp -r dist/* /asset-output/ && cp -r data/ /asset-output/',
+          ],
+          environment: {
+            'npm_config_cache': '/tmp/.npm-cache',
+          },
+        },
+      }),
       handler: 'populate-db.handler',
       environment: {
         RDS_HOST: rdsInstance.dbInstanceEndpointAddress,
