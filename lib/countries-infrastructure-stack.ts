@@ -53,7 +53,7 @@ export class CountriesInfrastructureStack extends cdk.Stack {
         RDS_DBNAME: this.databaseName,
       },
       vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       securityGroups: [rdsInstance.connections.securityGroups[0]],
     });
 
